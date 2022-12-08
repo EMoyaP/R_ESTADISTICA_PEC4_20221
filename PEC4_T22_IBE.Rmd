@@ -1,0 +1,194 @@
+---
+title: "PEC4 Otoño 2022"
+author: "UOC"
+date: ''
+output:
+  pdf_document: default
+  word_document: default
+fontsize: 12pt
+---
+
+Las PECs se basarán en una base de datos obtenida a partir del repositorio de microdatos del “Banco Mundial” en
+ https://microdata.worldbank.org/index.php/catalog/424/get-microdata 
+
+Contiene indicaciones, entre otros de 
+
+1. *City* = Nombre de la ciudad 
+2. *Country* = País 
+3. *Population2000* = Población de la ciudad en 2000. 
+4. *PM10Concentration1999* = “PM10 concentrations (micro gramos por cubic meter) in  residential areas of cities larger than 100,000”, en 1999 
+5. *Region* = Clasificación en región geográfica 
+6. *IncomeGroup* = Clasificación según nivel de ingresos del país. 
+
+Para importar los datos podemos usar la siguiente instrucción: 
+
+```{r}
+dadesPM10<-read.table("AirPollution2000WB_UOC2.csv", header=TRUE, 
+          sep=";",na.strings="NA",
+          fileEncoding = "UTF-8", quote = "\"", 
+          colClasses=c(rep("character",4),rep("numeric",2),
+                       rep("character",2)))
+```
+
+Hay que entregar la práctica en forma de fichero pdf (exportando el resultado final a pdf por ejemplo) en esta misma tarea Moodle; no hay que entregarla en el registro de EC. 
+
+Os puede ser útil consultar el siguiente material:
+
+1. Módulo de Intervalos de confianza.
+2. Actividades resueltas del Reto 3 (Intervalos de confianza).
+3. Procurad utilizar las funciones propias de R para hacer los cálculos a no ser que se diga lo contrario.
+
+# NOMBRE: EUGENIO MOYA PÉREZ
+
+# PEC4
+
+Una vez importados los datos, con la misma base de datos y suponiendo que los datos corresponden a una muestra, 
+
+
+## Pregunta 1 (50%) 
+
+a) (10%) Encontrad un intervalo de confianza para la media de la concentración de partículas PM10 del año 1999 *(PM10Concentration1999)* con un nivel del $90$% para las ciudades de Ucrania.
+
+b) (10%) Encontrad un intervalo de confianza para la media de la concentración de partículas PM10 del año 1999 *(PM10Concentration1999)* con un nivel del $90$% para las ciudades de la Federación Rusa.
+
+c) (10%) ¿Qué conclusión podemos extraer sobre la concentración de partículas PM10 en las ciudades de los dos países, en base a los intervalos encontrados?
+
+d) (20%) Encontrad ahora un intervalo de confianza para la media de la concentración de partículas PM10 del año 1999 *(PM10Concentration1999)* con un nivel del $99$% para las ciudades de la Federación Rusa. Comparadlo con el obtenido a b) y explicad cuál es más ancho y por qué.
+
+
+
+### Solución
+
+**a)**
+
+```{r}
+
+options (scipen = 999)
+attach(dadesPM10)
+tUkraina <- t.test(PM10Concentration1999[Country == "Ukraine"],conf.level = 0.90)
+tUkraina
+```
+**El intervalo de confianza pedido es: (30.70274, 32.98354).**
+
+**b)**
+```{r}
+options (scipen = 999)
+attach(dadesPM10)
+tRussian <- t.test(PM10Concentration1999[Country == "Russian Federation"],conf.level = 0.90)
+tRussian
+```
+**El intervalo de confianza pedido es: (23.21085, 24.52568)**
+
+**c)**
+**En este caso los intervalos son disjuntos porque el intervalo de confianza de las ciudades de Ucrania es mayor que el de la Federación Rusa y la concentracion de partículas PM10 de las ciudades de UCrania es mayor que las rusas.**
+
+**d)**
+```{r}
+options (scipen = 999)
+attach(dadesPM10)
+tRussian <- t.test(PM10Concentration1999[Country == "Russian Federation"],conf.level = 0.99)
+tRussian
+```
+El intervalo de confianza para el $90$% es: (23.21085, 24.52568).
+
+El intervalo de confianza para el $99$% es: (22.83261, 24.90392).
+
+
+**El intervalo más ancho es el intervalo del $99%$ dado que sus limite inferior y el superior son mayores que el intervalo del $90%$.**
+
+
+## Pregunta 2 (50%) 
+
+Queremos estudiar la proporción de ciudades correspondientes a países de diferentes regiones geográficas
+
+a) (10%) Calculad un intervalo de confianza del $80$% para la proporción de ciudades que están en países de Europa y Asia Central mediante la función *prop.test* con la opción *correct=FALSE*.
+
+b) (10%) Calculad un intervalo de confianza del $80$% para la proporción de ciudades que están en países que **no** pertenecen a países de Europa y Asia Central mediante la función *prop.test* con la opción *correct=FALSE*.
+
+c) (10%) En base en los apartados anteriores, ¿podemos decir que hay diferencias entre la proporción de ciudades que están en Europa y Asia Central y la de ciudades que no son de Europa y Asia Central? ¿Hay alguna relación entre los intervalos? Razonad vuestra respuesta.
+
+d) (20%) Si no tuviéramos la información sobre la proporción muestral para ciudades que están en países de Europa y Asia Central del apartado a), calculad cuál tiene que ser el tamaño mínimo de la muestra para obtener un intervalo (también al $80$%) pero con un margen de error inferior a $0.03$. Para este apartado usad las fórmulas de los módulos de teoría y R para hacer las operaciones.
+
+### Solución
+
+**a)**
+
+- Calculamos el tamaño de la muestra:
+
+```{r}
+lengthMuestra <- length(PM10Concentration1999)
+lengthMuestra
+```
+
+- Calculamos el tamaño de la muestra de las regiones:
+
+```{r}
+lengthRegiones <-length(Region[Region == "Europe & Central Asia"])
+lengthRegiones
+```
+- Calculamos los intervalos de las regiones:
+
+```{r}
+intervalosRegiones <- prop.test(lengthRegiones, lengthMuestra, alternative='two.sided', p=0.5,
+conf.level=0.80,correct=FALSE)
+intervalosRegiones
+```
+
+**El intervalo de confianza será: (0.2607464, 0.2808175)**
+
+**b)**
+
+
+- Calculamos el tamaño de la muestra:
+
+```{r}
+lengthMuestra2 <- length(PM10Concentration1999)
+lengthMuestra2
+```
+
+- Calculamos el tamaño de la muestra de las regiones no incluidas:
+
+```{r}
+lengthRegiones2 <-length(Region[Region != "Europe & Central Asia"])
+lengthRegiones2
+```
+- Calculamos los intervalos de las regiones:
+
+```{r}
+intervalosRegiones2 <- prop.test(lengthRegiones2, lengthMuestra2, alternative='two.sided', p=0.5,
+conf.level=0.80,correct=FALSE)
+intervalosRegiones2
+```
+**El intervalo de confianza será: (0.7191825, 0.7392536)**
+
+\newpage
+
+**c)**
+
+**Con los datos obtenidos en ambos apartados podemos ver que el tamaño de la muestra de las regiones que no pertenecen a "Europe & Central Asia" es mayor, 2347 observaciones, y las que si pertenecen a la región mencionada tiene una tamaño de 871 observaciones. La relación existente entre los intervalos es que la muestra total es la unión de ambos intervalos.Al ser disjuntos se puede asegurar que las proporciones son diferentes.**
+
+
+**d)**
+
+Para calcular el tamaño mínimo de la muestra con los datos proporcionados usaremos:
+
+$n \ge \frac{1}{4}(\frac{\frac{Z\alpha}{2}}{ME})^2$
+
+
+```{r}
+ME <- 0.03
+zAlpha_2 <- abs(qnorm((1-0.80)/2))
+
+print (c("Valor crítico zAlpha_2:", zAlpha_2))
+```
+```{r}
+n<-(1/4)*(zAlpha_2/ME)^2
+roundN<-ceiling(n)
+print (c("n:",roundN))
+
+```
+Por lo que aplicando la fórmula y sustituyendo los datos tenemos:
+
+$n \ge \frac{1}{4}(\frac{\frac{Z\alpha}{2}}{ME})^2 = \frac{1}{4}(\frac{1.2815515655446}{0.03})^2 = 456.2151 \simeq 457$
+
+
